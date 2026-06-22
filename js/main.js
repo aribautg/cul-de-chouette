@@ -18,7 +18,7 @@ class App {
     this.sound = new SoundManager();
     this.particles = new ParticleSystem();
     this.diceAnimator = new DiceAnimator();
-    this.lobby = new LobbyUI('http://localhost:3000'); // Changer en prod vers l'URL Railway
+    this.lobby = new LobbyUI('https://cul-de-chouette-production.up.railway.app');
     this.rulesPanel = null;
     this.selectedDifficulty = 1;
     this.pendingVerdierBets = {};
