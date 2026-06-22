@@ -1,0 +1,163 @@
+/* === BUZZ OVERLAY === */
+
+.buzz-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 20, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.buzz-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.buzz-content {
+  padding: var(--spacing-xl) var(--spacing-xl);
+  text-align: center;
+  max-width: 600px;
+  width: 90%;
+}
+
+.buzz-title {
+  font-family: var(--font-title);
+  font-size: 2rem;
+  color: var(--gold);
+  text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+  margin-bottom: var(--spacing-sm);
+  animation: titleFloat 1s ease-in-out infinite;
+}
+
+.buzz-instruction {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
+  font-style: italic;
+}
+
+/* Countdown */
+.buzz-countdown {
+  font-family: var(--font-title);
+  font-size: 3rem;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-lg);
+  transition: color 0.3s ease;
+}
+
+.buzz-countdown-urgent {
+  color: var(--red) !important;
+  animation: shake 0.3s ease infinite;
+}
+
+/* Joueurs */
+.buzz-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.buzz-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-card);
+  border: 2px solid var(--border-wood);
+  border-radius: var(--radius-md);
+  min-width: 90px;
+  transition: all 0.2s ease;
+}
+
+.buzz-player-done {
+  border-color: var(--green) !important;
+  background: rgba(45, 139, 79, 0.1);
+}
+
+.buzz-player-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  border: 2px solid var(--border-wood);
+}
+
+.buzz-player-name {
+  font-family: var(--font-title);
+  font-size: 0.75rem;
+  color: var(--text-primary);
+}
+
+.buzz-player-key {
+  font-family: var(--font-ui);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--gold);
+  background: var(--bg-primary);
+  border: 2px solid var(--gold-dark);
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 0 var(--gold-dark);
+}
+
+.buzz-player-status {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  min-height: 1.2em;
+}
+
+.buzz-player-status.buzzed {
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* Résultat */
+.buzz-result {
+  font-family: var(--font-title);
+  font-size: 1.3rem;
+  margin-top: var(--spacing-md);
+  min-height: 2em;
+}
+
+.buzz-result-win {
+  color: var(--green);
+}
+
+.buzz-result-lose {
+  color: var(--red);
+}
+
+.buzz-result-tie {
+  color: var(--gold);
+}
+
+/* Animation d'apparition pour le résultat */
+.buzz-result:not(:empty) {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Indicateur "Appuyez !" clignotant */
+@keyframes buzzPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.buzz-instruction {
+  animation: buzzPulse 1.5s ease-in-out infinite;
+}

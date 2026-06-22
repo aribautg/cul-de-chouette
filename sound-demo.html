@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cul de Chouette — Démo Sons</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Crimson Text', serif;
+      background: #0f0e17;
+      color: #f4e4c1;
+      padding: 40px;
+      min-height: 100vh;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      color: #d4af37;
+      text-align: center;
+      margin-bottom: 32px;
+      font-size: 2rem;
+    }
+    table {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      border-collapse: collapse;
+    }
+    th {
+      font-family: 'Cinzel', serif;
+      color: #d4af37;
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 2px solid #4a3728;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #2a2a3e;
+      vertical-align: middle;
+    }
+    tr:hover { background: rgba(212, 175, 55, 0.05); }
+    .sound-name {
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      color: #f0d060;
+    }
+    .sound-desc { color: #b8a88a; font-size: 0.9rem; }
+    .sound-when { color: #a0a0b0; font-size: 0.85rem; }
+    .btn-play {
+      background: linear-gradient(180deg, #3a3a5a 0%, #2a2a3e 100%);
+      border: 2px solid #d4af37;
+      color: #f4e4c1;
+      padding: 8px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      transition: all 0.15s ease;
+    }
+    .btn-play:hover {
+      background: linear-gradient(180deg, #4a4a6a 0%, #3a3a5a 100%);
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
+      transform: translateY(-1px);
+    }
+    .btn-play:active { transform: translateY(1px); }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #6a5a4a;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+<h1>⚔️ Démo des Sons ⚔️</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Son</th>
+      <th>Description</th>
+      <th>Quand</th>
+      <th>Écouter</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="sound-name">Lancer de dé</td>
+      <td class="sound-desc">Impact bois + claquement. Dé qui frappe la table.</td>
+      <td class="sound-when">Clic sur "Lancer les Chouettes" / "Lancer le Cul"</td>
+      <td><button class="btn-play" onclick="sound.diceRoll()">▶ Écouter</button></td>
+    </tr>
+    <tr>
+      <td class="sound-name">Dé atterrit</td>
+      <td class="sound-desc">Impact sourd et mat. Dé qui se pose.</td>
+      <td class="sound-when">Fin de chaque animation 3D de dé</td>
+      <td><button class="btn-play" onclick="sound.diceLand()">▶ Écouter</button></td>
+    </tr>
+    <tr>
+      <td class="sound-name">Gain de points</td>
+      <td class="sound-desc">Fanfare 3 notes montantes (Do-Mi-Sol). Joyeux.</td>
+      <td class="sound-when">Chaque gain de points (Chouette, Velute, CdC, Sirop...)</td>
+      <td><button class="btn-play" onclick="sound.scoreGain()">▶ Écouter</button></td>
+    </tr>
+    <tr>
+      <td class="sound-name">Perte de points</td>
+      <td class="sound-desc">2 notes descendantes grinçantes (Mi→Do). Triste.</td>
+      <td class="sound-when">Chaque perte (Suite, Sirop raté, Bévue, Flan...)</td>
+      <td><button class="btn-play" onclick="sound.scoreLoss()">▶ Écouter</button></td>
+    </tr>
+    <tr>
+      <td class="sound-name">Buzz activé</td>
+      <td class="sound-desc">2 bips carrés montants rapides. Alerte !</td>
+      <td class="sound-when">Ouverture de l'overlay de buzz</td>
+      <td><button class="btn-play" onclick="sound.buzzStart()">▶ Écouter</button></td>
+    </tr>
+    <tr>
+      <td class="sound-name">Joueur buzze</td>
+      <td class="sound-desc">Bip carré court et net (660 Hz).</td>
+      <td class="sound-when">Appui sur touche pendant un buzz</td>
+      <td><button class="btn-play" onclick="sound.buzzPress()">▶ Écouter</button></td>
+    </tr>
+    <tr>
+      <td class="sound-name">Victoire</td>
+      <td class="sound-desc">Arpège triomphant 4 notes (Do-Mi-Sol-Do↑). Gloire !</td>
+      <td class="sound-when">Un joueur atteint 343 pts</td>
+      <td><button class="btn-play" onclick="sound.victory()">▶ Écouter</button></td>
+    </tr>
+    <tr>
+      <td class="sound-name">Bévue</td>
+      <td class="sound-desc">Note grave et grasse, longue (150 Hz). Punition.</td>
+      <td class="sound-when">Erreur de jeu (-10 pts)</td>
+      <td><button class="btn-play" onclick="sound.bevue()">▶ Écouter</button></td>
+    </tr>
+    <tr>
+      <td class="sound-name">Sirop réussi</td>
+      <td class="sound-desc">Gamme ascendante rapide 4 notes. Montée triomphale.</td>
+      <td class="sound-when">Sirop transforme Chouette → Cul de Chouette</td>
+      <td><button class="btn-play" onclick="sound.siropSuccess()">▶ Écouter</button></td>
+    </tr>
+    <tr>
+      <td class="sound-name">Clic bouton</td>
+      <td class="sound-desc">Bip carré ultra-court (30ms). Feedback discret.</td>
+      <td class="sound-when">(Disponible — interactions boutons)</td>
+      <td><button class="btn-play" onclick="sound.click()">▶ Écouter</button></td>
+    </tr>
+    <tr>
+      <td class="sound-name">Countdown tick</td>
+      <td class="sound-desc">Tic aigu (1000 Hz, 20ms). Horloge.</td>
+      <td class="sound-when">(Disponible — countdown du buzz)</td>
+      <td><button class="btn-play" onclick="sound.tick()">▶ Écouter</button></td>
+    </tr>
+    <tr>
+      <td class="sound-name">Item obtenu</td>
+      <td class="sound-desc">2 notes sine aiguës montantes. Power-up !</td>
+      <td class="sound-when">Grelottine, Civet, Flan, Jarret obtenu</td>
+      <td><button class="btn-play" onclick="sound.itemGain()">▶ Écouter</button></td>
+    </tr>
+  </tbody>
+</table>
+
+<p class="footer">"C'est pas faux." — Perceval<br><br>Cliquez sur ▶ pour écouter chaque son. Généré en temps réel via Web Audio API.</p>
+
+<script type="module">
+  import { SoundManager } from './js/ui/SoundManager.js';
+  const sound = new SoundManager();
+  sound.volume = 0.5;
+  // Exposer globalement pour les onclick
+  window.sound = sound;
+</script>
+
+</body>
+</html>

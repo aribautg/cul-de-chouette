@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cul de Chouette — Le Jeu de Kaamelott</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/scoreboard.css">
+  <link rel="stylesheet" href="css/buzz.css">
+  <link rel="stylesheet" href="css/dice3d.css">
+  <link rel="stylesheet" href="css/torches.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- Flammes de torches animées (par-dessus le fond) -->
+    <div class="torch-flames">
+      <div class="torch-flame torch-left-top"></div>
+      <div class="torch-flame torch-right-top"></div>
+      <div class="torch-flame torch-left-bottom"></div>
+      <div class="torch-flame torch-right-bottom"></div>
+    </div>
+
+    <!-- === ÉCRAN TITRE === -->
+    <div id="title-screen" class="screen active">
+      <div class="title-float">
+        <div class="title-logo-img">
+          <img src="assets/images/logo-kaamelott.png" alt="Cul de Chouette" id="logo-img">
+        </div>
+        <h1 class="title-logo">Cul de Chouette</h1>
+        <p class="title-subtitle">Le jeu de dés de Kaamelott</p>
+      </div>
+      <div class="title-menu">
+        <button class="btn btn-primary btn-lg" id="btn-new-game">Nouvelle Partie</button>
+        <button class="btn btn-lg" id="btn-rules">Règles du Jeu</button>
+        <button class="btn btn-lg" id="btn-credits">Crédits</button>
+      </div>
+      <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 32px;">
+        "C'est pas faux." — Perceval
+      </p>
+    </div>
+
+    <!-- === ÉCRAN SETUP === -->
+    <div id="setup-screen" class="screen">
+      <div class="setup-container">
+        <h1 style="font-family: var(--font-title); color: var(--gold); text-align: center; margin-bottom: 32px;">
+          Configuration de la Partie
+        </h1>
+
+        <!-- Mode de jeu -->
+        <div class="setup-section">
+          <h2>Mode de Jeu</h2>
+          <div class="difficulty-selector" style="grid-template-columns: 1fr 1fr;">
+            <div class="difficulty-option selected" data-mode="local" id="mode-local">
+              <span class="difficulty-stars">🖥️</span>
+              <span class="difficulty-label">Local (même écran)</span>
+            </div>
+            <div class="difficulty-option" data-mode="online" id="mode-online">
+              <span class="difficulty-stars">🌐</span>
+              <span class="difficulty-label">En ligne</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Online (masquée par défaut) -->
+        <div class="setup-section" id="online-section" style="display: none;">
+          <h2>Multijoueur en Ligne</h2>
+          <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+            <div style="flex: 1; padding: 16px; background: var(--bg-card); border: 1px solid var(--border-wood); border-radius: 8px; text-align: center;">
+              <p style="color: var(--text-secondary); margin-bottom: 8px;">Créer une salle</p>
+              <input class="input-field" type="text" id="online-player-name" placeholder="Votre nom" style="width: 100%; margin-bottom: 8px;">
+              <button class="btn btn-primary" id="btn-create-room">Créer</button>
+            </div>
+            <div style="flex: 1; padding: 16px; background: var(--bg-card); border: 1px solid var(--border-wood); border-radius: 8px; text-align: center;">
+              <p style="color: var(--text-secondary); margin-bottom: 8px;">Rejoindre</p>
+              <input class="input-field" type="text" id="online-join-name" placeholder="Votre nom" style="width: 100%; margin-bottom: 8px;">
+              <input class="input-field" type="text" id="online-room-code" placeholder="Code salle (ex: CHOUETTE-42)" style="width: 100%; margin-bottom: 8px; text-transform: uppercase;">
+              <button class="btn btn-success" id="btn-join-room">Rejoindre</button>
+            </div>
+          </div>
+          <div id="online-status" style="text-align: center; color: var(--text-muted); font-size: 0.85rem;"></div>
+        </div>
+
+        <!-- Lobby (masqué, affiché après création/join) -->
+        <div class="setup-section" id="lobby-section" style="display: none;">
+          <h2>Salle : <span id="lobby-room-code" style="color: var(--gold);">—</span></h2>
+          <p style="color: var(--text-secondary); margin-bottom: 12px;">Partagez ce code aux autres joueurs pour qu'ils rejoignent.</p>
+          <div id="lobby-players" class="players-list"></div>
+          <div style="display: flex; gap: 12px; margin-top: 16px; justify-content: center;">
+            <button class="btn btn-sm" id="btn-toggle-mic" title="Micro">🎤 Micro</button>
+            <button class="btn btn-sm" id="btn-toggle-cam" title="Caméra">📷 Caméra</button>
+          </div>
+          <div id="lobby-videos" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; justify-content: center;"></div>
+          <div style="text-align: center; margin-top: 16px;">
+            <button class="btn btn-primary btn-lg" id="btn-start-online">Lancer la Partie</button>
+          </div>
+        </div>
+
+        <!-- Difficulté -->
+        <div class="setup-section">
+          <h2>Niveau de Difficulté</h2>
+          <div class="difficulty-selector">
+            <div class="difficulty-option selected" data-difficulty="1">
+              <span class="difficulty-stars">★</span>
+              <span class="difficulty-label">Découverte</span>
+            </div>
+            <div class="difficulty-option" data-difficulty="2">
+              <span class="difficulty-stars">★★</span>
+              <span class="difficulty-label">Intermédiaire</span>
+            </div>
+            <div class="difficulty-option" data-difficulty="3">
+              <span class="difficulty-stars">★★★</span>
+              <span class="difficulty-label">Avancé</span>
+            </div>
+            <div class="difficulty-option" data-difficulty="4">
+              <span class="difficulty-stars">★★★★</span>
+              <span class="difficulty-label">Expert</span>
+            </div>
+          </div>
+          <p id="difficulty-description" style="margin-top: 12px; font-size: 0.85rem; color: var(--text-secondary); text-align: center;">
+            Règles de base : Chouette, Velute, Suite, Cul de Chouette, Sirop, Grelottine, Civet.
+          </p>
+        </div>
+
+        <!-- Joueurs -->
+        <div class="setup-section">
+          <h2>Joueurs <span style="font-size: 0.8rem; color: var(--text-muted);">(2 à 16)</span></h2>
+          <div class="players-list" id="players-list">
+            <!-- Rempli dynamiquement -->
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 12px;">
+            <button class="btn btn-sm" id="btn-add-player">+ Ajouter un joueur</button>
+            <button class="btn btn-sm btn-danger" id="btn-remove-player">- Retirer</button>
+          </div>
+        </div>
+
+        <!-- Options -->
+        <div class="setup-section">
+          <h2>Options</h2>
+          <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+            <input type="checkbox" id="opt-negative-scores" checked>
+            <span>Autoriser les scores négatifs</span>
+          </label>
+        </div>
+
+        <!-- Lancer -->
+        <div style="text-align: center; margin-top: 32px;">
+          <button class="btn btn-primary btn-lg" id="btn-start-game">Lancer la Partie</button>
+          <br>
+          <button class="btn btn-sm" id="btn-back-title" style="margin-top: 12px;">← Retour</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- === ÉCRAN DE JEU === -->
+    <div id="game-screen" class="screen">
+      <!-- Header -->
+      <div class="game-header">
+        <div class="turn-info">
+          <span class="turn-number" id="turn-number">Tour 1</span>
+          <span class="current-player-name" id="current-player-name">—</span>
+        </div>
+        <div class="game-controls">
+          <button class="btn btn-sm" id="btn-sound-toggle" title="Sons">🔊</button>
+          <button class="btn btn-sm" id="btn-log">📜 Log</button>
+          <button class="btn btn-sm" id="btn-rules-ingame">📖 Règles</button>
+        </div>
+      </div>
+
+      <!-- Zone principale -->
+      <div class="game-main">
+        <!-- Zone des dés -->
+        <div class="dice-zone">
+          <div>
+            <div class="dice-group" id="dice-chouettes">
+              <div class="die empty" id="die-1">?</div>
+              <div class="die empty" id="die-2">?</div>
+            </div>
+            <div class="dice-label">Chouettes</div>
+          </div>
+          <div class="dice-separator"></div>
+          <div>
+            <div class="dice-group">
+              <div class="die empty" id="die-3">?</div>
+            </div>
+            <div class="dice-label">Cul</div>
+          </div>
+        </div>
+
+        <!-- Zone d'explication -->
+        <div class="explanation-zone rpg-window" id="explanation-zone">
+          <div class="explanation-title" id="explanation-title">Prêt à jouer</div>
+          <div class="explanation-text" id="explanation-text">
+            Cliquez sur "Lancer les Chouettes" pour commencer votre tour.
+          </div>
+        </div>
+
+        <!-- Zone d'actions -->
+        <div class="action-zone" id="action-zone">
+          <button class="btn btn-primary" id="btn-roll-chouettes">🎲 Lancer les Chouettes</button>
+        </div>
+      </div>
+
+      <!-- Scoreboard -->
+      <div class="scoreboard" id="scoreboard">
+        <!-- Rempli dynamiquement -->
+      </div>
+    </div>
+
+    <!-- === ÉCRAN GAME OVER === -->
+    <div id="gameover-screen" class="screen">
+      <div class="winner-announcement" id="winner-name">🏆 Victoire ! 🏆</div>
+      <div class="winner-subtitle" id="winner-score">— pts</div>
+      <div style="margin-top: 32px;">
+        <button class="btn btn-primary btn-lg" id="btn-new-game-end">Nouvelle Partie</button>
+        <button class="btn btn-lg" id="btn-back-title-end" style="margin-left: 12px;">Menu Principal</button>
+      </div>
+    </div>
+
+    <!-- === MODAL DASHBOARD JOUEUR === -->
+    <div class="modal-overlay" id="dashboard-overlay">
+      <div class="modal rpg-window dashboard-modal" id="dashboard-modal">
+        <div class="dashboard-header">
+          <div class="dashboard-avatar" id="dashboard-avatar">👤</div>
+          <div>
+            <div class="dashboard-name" id="dashboard-name">Joueur</div>
+            <div class="dashboard-score" id="dashboard-score">0 pts</div>
+          </div>
+        </div>
+        <div class="dashboard-section">
+          <h3>Inventaire</h3>
+          <div class="inventory-grid" id="dashboard-inventory">
+            <!-- Rempli dynamiquement -->
+          </div>
+        </div>
+        <div class="dashboard-section">
+          <h3>Historique récent</h3>
+          <div class="history-list" id="dashboard-history">
+            <!-- Rempli dynamiquement -->
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 16px;">
+          <button class="btn btn-sm" id="btn-close-dashboard">Fermer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- === PANEL LOG === -->
+    <div class="game-log-panel" id="log-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-family: var(--font-title); color: var(--gold); font-size: 1rem;">Historique</h3>
+        <button class="btn btn-sm" id="btn-close-log">✕</button>
+      </div>
+      <div id="log-entries">
+        <!-- Rempli dynamiquement -->
+      </div>
+    </div>
+
+    <!-- === PANEL RÈGLES === -->
+    <div class="game-log-panel" id="rules-panel" style="left: 0; right: auto; border-left: none; border-right: 2px solid var(--border-wood); width: 380px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-family: var(--font-title); color: var(--gold); font-size: 1rem;">📖 Règles</h3>
+        <button class="btn btn-sm" id="btn-close-rules">✕</button>
+      </div>
+      <div id="rules-content" style="font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary);">
+        <!-- Rempli dynamiquement selon la difficulté -->
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

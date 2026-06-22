@@ -1,0 +1,153 @@
+/* === FLAMMES DE TORCHES ANIMÉES === */
+
+.torch-flames {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.torch-flame {
+  position: absolute;
+  width: 30px;
+  height: 60px;
+}
+
+/* Positionnement des torches (ajuster selon l'image de fond) */
+.torch-left-top { top: 15%; left: 8%; }
+.torch-right-top { top: 15%; right: 8%; }
+.torch-left-bottom { top: 55%; left: 5%; }
+.torch-right-bottom { top: 55%; right: 5%; }
+
+/* Chaque flamme est composée de 3 couches */
+.torch-flame::before,
+.torch-flame::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  border-radius: 50% 50% 20% 20%;
+  transform: translateX(-50%);
+  filter: blur(1px);
+}
+
+/* Couche extérieure : orange/rouge */
+.torch-flame::before {
+  width: 20px;
+  height: 45px;
+  background: radial-gradient(ellipse at 50% 80%,
+    rgba(255, 150, 0, 0.9) 0%,
+    rgba(255, 80, 0, 0.7) 40%,
+    rgba(200, 30, 0, 0.3) 70%,
+    transparent 100%
+  );
+  animation: torchOuter 0.4s ease-in-out infinite alternate;
+}
+
+/* Couche intérieure : jaune/blanc */
+.torch-flame::after {
+  width: 10px;
+  height: 30px;
+  background: radial-gradient(ellipse at 50% 75%,
+    rgba(255, 255, 220, 0.95) 0%,
+    rgba(255, 220, 80, 0.8) 40%,
+    rgba(255, 150, 0, 0.4) 70%,
+    transparent 100%
+  );
+  animation: torchInner 0.3s ease-in-out infinite alternate;
+}
+
+/* Lueur autour de la torche (glow) */
+.torch-flame {
+  background: radial-gradient(ellipse at 50% 70%,
+    rgba(255, 120, 0, 0.15) 0%,
+    rgba(255, 80, 0, 0.05) 50%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  animation: torchGlow 1.5s ease-in-out infinite alternate;
+}
+
+/* Animations */
+@keyframes torchOuter {
+  0% {
+    height: 42px;
+    width: 18px;
+    transform: translateX(-50%) skewX(-2deg);
+    opacity: 0.85;
+  }
+  50% {
+    height: 48px;
+    width: 22px;
+    transform: translateX(-50%) skewX(1deg);
+    opacity: 1;
+  }
+  100% {
+    height: 44px;
+    width: 19px;
+    transform: translateX(-50%) skewX(3deg);
+    opacity: 0.9;
+  }
+}
+
+@keyframes torchInner {
+  0% {
+    height: 28px;
+    width: 9px;
+    transform: translateX(-50%) skewX(2deg);
+    opacity: 0.9;
+  }
+  50% {
+    height: 32px;
+    width: 11px;
+    transform: translateX(-50%) skewX(-1deg);
+  }
+  100% {
+    height: 26px;
+    width: 8px;
+    transform: translateX(-50%) skewX(-3deg);
+    opacity: 0.95;
+  }
+}
+
+@keyframes torchGlow {
+  0% {
+    box-shadow: 0 0 30px 10px rgba(255, 100, 0, 0.15);
+    transform: scale(1);
+  }
+  100% {
+    box-shadow: 0 0 45px 15px rgba(255, 120, 0, 0.2);
+    transform: scale(1.05);
+  }
+}
+
+/* Étincelles individuelles par torche */
+.torch-flame .spark {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 2px;
+  height: 2px;
+  background: rgba(255, 200, 50, 0.9);
+  border-radius: 50%;
+  animation: sparkRise 1.2s ease-out infinite;
+  opacity: 0;
+}
+
+@keyframes sparkRise {
+  0% { transform: translate(-50%, 0) scale(1); opacity: 0.8; }
+  100% { transform: translate(calc(-50% + var(--dx, 5px)), -40px) scale(0); opacity: 0; }
+}
+
+/* Variantes de timing pour chaque torche (naturel) */
+.torch-left-top::before { animation-duration: 0.38s; animation-delay: 0s; }
+.torch-left-top::after { animation-duration: 0.28s; animation-delay: 0.05s; }
+
+.torch-right-top::before { animation-duration: 0.42s; animation-delay: 0.1s; }
+.torch-right-top::after { animation-duration: 0.32s; animation-delay: 0.08s; }
+
+.torch-left-bottom::before { animation-duration: 0.36s; animation-delay: 0.15s; }
+.torch-left-bottom::after { animation-duration: 0.26s; animation-delay: 0.12s; }
+
+.torch-right-bottom::before { animation-duration: 0.4s; animation-delay: 0.05s; }
+.torch-right-bottom::after { animation-duration: 0.3s; animation-delay: 0.02s; }

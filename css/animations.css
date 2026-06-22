@@ -1,0 +1,154 @@
+/* === ANIMATIONS === */
+
+/* --- Lancer de dés (amélioré) --- */
+@keyframes diceRoll {
+  0% { transform: translateY(0) rotateX(0) rotateZ(0) scale(1); opacity: 0.3; }
+  15% { transform: translateY(-30px) rotateX(180deg) rotateZ(90deg) scale(1.2); opacity: 0.7; }
+  35% { transform: translateY(-10px) rotateX(360deg) rotateZ(180deg) scale(1.1); opacity: 0.9; }
+  55% { transform: translateY(-5px) rotateX(540deg) rotateZ(270deg) scale(1.05); }
+  100% { transform: translateY(0) rotateX(720deg) rotateZ(360deg) scale(1); opacity: 1; }
+}
+
+@keyframes diceBounce {
+  0% { transform: translateY(-15px) scale(1.15); }
+  25% { transform: translateY(0) scale(0.92); }
+  45% { transform: translateY(-6px) scale(1.05); }
+  65% { transform: translateY(0) scale(0.97); }
+  80% { transform: translateY(-2px) scale(1.02); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes diceAppear {
+  0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.dice-rolling {
+  animation: diceRoll 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dice-landed {
+  animation: diceBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dice-appear {
+  animation: diceAppear 0.3s ease;
+}
+
+/* --- Points gagné/perdu --- */
+@keyframes scoreUp {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-30px); opacity: 0; }
+}
+
+@keyframes scoreDown {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(30px); opacity: 0; }
+}
+
+.score-popup {
+  position: absolute;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 1.2rem;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.score-popup.positive {
+  color: var(--green);
+  animation: scoreUp 1.5s ease forwards;
+}
+
+.score-popup.negative {
+  color: var(--red);
+  animation: scoreDown 1.5s ease forwards;
+}
+
+/* --- Pulse doré (joueur actif) --- */
+@keyframes goldenPulse {
+  0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+  50% { box-shadow: 0 0 15px 5px rgba(212, 175, 55, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+}
+
+.active-player {
+  animation: goldenPulse 2s infinite;
+  border-color: var(--gold) !important;
+}
+
+/* --- Shake (erreur / bévue) --- */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.shake {
+  animation: shake 0.5s ease;
+}
+
+/* --- Fade in --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+/* --- Glow items --- */
+@keyframes itemGlow {
+  0% { filter: drop-shadow(0 0 2px var(--gold)); }
+  50% { filter: drop-shadow(0 0 8px var(--gold-light)); }
+  100% { filter: drop-shadow(0 0 2px var(--gold)); }
+}
+
+.item-new {
+  animation: itemGlow 1s ease 3;
+}
+
+/* --- Entrée écran titre --- */
+@keyframes titleFloat {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+.title-float {
+  animation: titleFloat 3s ease-in-out infinite;
+}
+
+/* --- Particules dorées --- */
+@keyframes particle {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+}
+
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: particle 1.5s ease forwards;
+}
+
+/* --- Transition écrans --- */
+.screen {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-slow);
+  z-index: 1;
+}
+
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+  z-index: 10;
+}

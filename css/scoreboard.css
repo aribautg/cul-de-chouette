@@ -1,0 +1,224 @@
+/* === SCOREBOARD SPÉCIFIQUE === */
+
+/* Épée Excalibur — progression vers 343 */
+.player-card-progress {
+  width: 100%;
+  height: 36px;
+  position: relative;
+  margin-top: 4px;
+}
+
+.excalibur-sword {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* L'épée SVG en inline */
+.excalibur-sword svg {
+  width: 100%;
+  height: 34px;
+  filter: saturate(0) brightness(0.5); /* Grisée par défaut */
+  transition: filter 0.5s ease;
+}
+
+/* Niveaux d'enflammement selon la progression */
+.excalibur-sword[data-progress="0"] svg {
+  filter: saturate(0) brightness(0.4);
+}
+
+.excalibur-sword[data-progress="1"] svg {
+  filter: saturate(0.2) brightness(0.55);
+}
+
+.excalibur-sword[data-progress="2"] svg {
+  filter: saturate(0.4) brightness(0.7) hue-rotate(-10deg);
+}
+
+.excalibur-sword[data-progress="3"] svg {
+  filter: saturate(0.7) brightness(0.85) hue-rotate(-5deg);
+}
+
+.excalibur-sword[data-progress="4"] svg {
+  filter: saturate(1) brightness(1);
+}
+
+.excalibur-sword[data-progress="5"] svg {
+  filter: saturate(1.3) brightness(1.2) drop-shadow(0 0 4px rgba(255, 100, 0, 0.6));
+}
+
+.excalibur-sword[data-progress="6"] svg {
+  filter: saturate(1.5) brightness(1.3) drop-shadow(0 0 8px rgba(255, 60, 0, 0.8));
+  animation: swordFlicker 1.5s ease-in-out infinite;
+}
+
+.excalibur-sword[data-progress="7"] svg {
+  filter: saturate(1.8) brightness(1.4) drop-shadow(0 0 12px rgba(255, 30, 0, 1));
+  animation: swordBlaze 0.8s ease-in-out infinite;
+}
+
+/* Overlay de flammes — Réalistes, animées, blanc→orange→jaune */
+.excalibur-flame {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.6s ease;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Couche intérieure : cœur blanc incandescent */
+.excalibur-flame::before {
+  content: '';
+  position: absolute;
+  inset: 25% 5% 25% 2%;
+  background: radial-gradient(ellipse 80% 60% at 50% 55%,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 220, 0.8) 25%,
+    rgba(255, 200, 80, 0.5) 55%,
+    transparent 75%
+  );
+  filter: blur(1.5px);
+  animation: flameCore 0.35s ease-in-out infinite alternate;
+  z-index: 3;
+}
+
+/* Couche extérieure : orange vif + jaune doré avec ondulation */
+.excalibur-flame::after {
+  content: '';
+  position: absolute;
+  inset: -20% 2% -20% 0%;
+  background:
+    radial-gradient(ellipse 30% 100% at 15% 50%, rgba(255, 220, 0, 0.85) 0%, transparent 55%),
+    radial-gradient(ellipse 25% 110% at 35% 40%, rgba(255, 150, 0, 0.8) 0%, transparent 50%),
+    radial-gradient(ellipse 35% 90% at 50% 55%, rgba(255, 200, 30, 0.75) 0%, transparent 55%),
+    radial-gradient(ellipse 25% 100% at 65% 42%, rgba(255, 130, 0, 0.8) 0%, transparent 50%),
+    radial-gradient(ellipse 30% 95% at 82% 50%, rgba(255, 180, 0, 0.75) 0%, transparent 55%);
+  animation: flameOuter 0.5s ease-in-out infinite alternate;
+  z-index: 2;
+}
+
+/* Particules de flammes */
+.flame-particle {
+  position: absolute;
+  border-radius: 50% 50% 30% 30%;
+  pointer-events: none;
+  animation: flameParticleRise 0.9s ease-out infinite;
+  opacity: 0;
+}
+
+.flame-particle:nth-child(1) { left: 12%; width: 3px; height: 7px; animation-delay: 0s; background: rgba(255, 240, 80, 0.9); }
+.flame-particle:nth-child(2) { left: 25%; width: 2px; height: 5px; animation-delay: 0.2s; background: rgba(255, 180, 0, 0.85); }
+.flame-particle:nth-child(3) { left: 38%; width: 3px; height: 8px; animation-delay: 0.35s; background: rgba(255, 255, 120, 0.9); }
+.flame-particle:nth-child(4) { left: 52%; width: 2px; height: 6px; animation-delay: 0.12s; background: rgba(255, 160, 0, 0.85); }
+.flame-particle:nth-child(5) { left: 66%; width: 3px; height: 7px; animation-delay: 0.28s; background: rgba(255, 220, 60, 0.9); }
+.flame-particle:nth-child(6) { left: 78%; width: 2px; height: 5px; animation-delay: 0.45s; background: rgba(255, 140, 0, 0.8); }
+
+@keyframes flameParticleRise {
+  0% { bottom: 30%; opacity: 0.9; transform: scale(1) translateX(0); }
+  40% { opacity: 0.7; transform: scale(0.8) translateX(2px); }
+  100% { bottom: 110%; opacity: 0; transform: scale(0.2) translateX(-2px); }
+}
+
+@keyframes flameCore {
+  0% { transform: scaleY(0.88) scaleX(0.95); opacity: 0.85; }
+  100% { transform: scaleY(1.12) scaleX(1.05); opacity: 1; }
+}
+
+@keyframes flameOuter {
+  0% { transform: scaleY(0.88) translateY(1px); opacity: 0.7; }
+  100% { transform: scaleY(1.12) translateY(-2px); opacity: 0.95; }
+}
+
+/* Niveaux de visibilité des flammes selon la progression */
+.excalibur-sword[data-progress="0"] .excalibur-flame,
+.excalibur-sword[data-progress="1"] .excalibur-flame {
+  opacity: 0;
+}
+
+.excalibur-sword[data-progress="2"] .excalibur-flame {
+  opacity: 0.2;
+}
+
+.excalibur-sword[data-progress="3"] .excalibur-flame {
+  opacity: 0.4;
+}
+
+.excalibur-sword[data-progress="4"] .excalibur-flame {
+  opacity: 0.6;
+}
+
+.excalibur-sword[data-progress="5"] .excalibur-flame {
+  opacity: 0.75;
+}
+
+.excalibur-sword[data-progress="6"] .excalibur-flame {
+  opacity: 0.9;
+}
+
+.excalibur-sword[data-progress="7"] .excalibur-flame {
+  opacity: 1;
+}
+
+/* Animations de flammes */
+@keyframes swordFlicker {
+  0%, 100% { filter: saturate(1.5) brightness(1.3) drop-shadow(0 0 8px rgba(255, 60, 0, 0.8)); }
+  50% { filter: saturate(1.4) brightness(1.25) drop-shadow(0 0 6px rgba(255, 80, 0, 0.6)); }
+}
+
+@keyframes swordBlaze {
+  0%, 100% { filter: saturate(1.8) brightness(1.4) drop-shadow(0 0 12px rgba(255, 30, 0, 1)); }
+  30% { filter: saturate(2) brightness(1.5) drop-shadow(0 0 16px rgba(255, 200, 0, 1)); }
+  60% { filter: saturate(1.6) brightness(1.35) drop-shadow(0 0 10px rgba(255, 50, 0, 0.9)); }
+}
+
+/* Items du scoreboard avec tooltip */
+.item-icon[data-item="grelottine"]::before { content: '🛡️'; }
+.item-icon[data-item="civet"]::before { content: '🏺'; }
+.item-icon[data-item="civetFiloche"]::before { content: '🧵'; }
+.item-icon[data-item="flan"]::before { content: '🎯'; }
+.item-icon[data-item="jarret"]::before { content: '⚔️'; }
+.item-icon[data-item="passeGrelot"]::before { content: '🔄'; }
+.item-icon[data-item="rigodon"]::before { content: '🎵'; }
+
+/* Animation quand score change */
+.player-card.score-up {
+  animation: flashGreen 0.5s ease;
+}
+
+.player-card.score-down {
+  animation: flashRed 0.5s ease;
+}
+
+@keyframes flashGreen {
+  0% { background: var(--bg-card); }
+  50% { background: rgba(45, 139, 79, 0.3); }
+  100% { background: var(--bg-card); }
+}
+
+@keyframes flashRed {
+  0% { background: var(--bg-card); }
+  50% { background: rgba(168, 32, 57, 0.3); }
+  100% { background: var(--bg-card); }
+}
+
+/* Key binding indicator */
+.player-key {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  background: var(--bg-primary);
+  border: 1px solid var(--gold-dark);
+  border-radius: 3px;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  font-family: var(--font-ui);
+}
