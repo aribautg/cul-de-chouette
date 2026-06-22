@@ -101,26 +101,33 @@ export class LobbyUI {
 
     if (!code) { this._setStatus('❌ Entrez un code de salle.'); return; }
 
-    const res = await this.network.joinRoom(code, name, avatar);
-    if (res.success) {
-      this.isHost = false;
-      document.getElementById('lobby-room-code').textContent = res.roomCode;
-      document.getElementById('online-section').style.display = 'none';
-      document.getElementById('lobby-section').style.display = 'block';
-      document.getElementById('btn-start-online').style.display = 'none'; // seul l'hôte lance
-      this._setStatus(`Rejoint la salle ${res.roomCode}`);
-    } else {
-      this._setStatus('❌ ' + res.error);
+    this._setStatus(`Connexion à la salle ${code}...`);
+
+    try {
+      const res = await this.network.joinRoom(code, name, avatar);
+      if (res.success) {
+        this.isHost = false;
+        document.getElementById('lobby-room-code').textContent = res.roomCode;
+        document.getElementById('online-section').style.display = 'none';
+        document.getElementById('lobby-section').style.display = 'block';
+        document.getElementById('btn-start-online').style.display = 'none';
+        this._setStatus(`✓ Rejoint la salle ${res.roomCode}`);
+      } else {
+        this._setStatus('❌ ' + (res.error || 'Erreur inconnue'));
+      }
+    } catch (err) {
+      this._setStatus('❌ Erreur réseau : ' + err.message);
     }
   }
 
   async toggleMic() {
     if (!this.webrtc) return;
     if (!this.webrtc.localStream) {
-      await this.webrtc.enableMedia(true, false);
-      document.getElementById('btn-toggle-mic').textContent = '🎤 Micro ON';
-      // Connecter aux peers existants
-      this._connectToAllPeers();
+      const stream = await this.webrtc.enableMedia(true, false);
+      if (stream) {
+        document.getElementById('btn-toggle-mic').textContent = '🎤 Micro ON';
+        this._connectToAllPeers();
+      }
     } else {
       const enabled = this.webrtc.toggleMute();
       document.getElementById('btn-toggle-mic').textContent = enabled ? '🎤 Micro ON' : '🔇 Micro OFF';
@@ -129,16 +136,23 @@ export class LobbyUI {
 
   async toggleCam() {
     if (!this.webrtc) return;
-    if (!this.webrtc.localStream) {
+    if (!this.webrtc.videoEnabled) {
+      // Arrêter le stream actuel (audio seul) et en recréer un avec vidéo
+      this.webrtc.disableMedia();
       const stream = await this.webrtc.enableMedia(true, true);
       if (stream) {
         document.getElementById('btn-toggle-cam').textContent = '📷 Caméra ON';
+        document.getElementById('btn-toggle-mic').textContent = '🎤 Micro ON';
         this._addLocalVideo(stream);
         this._connectToAllPeers();
       }
     } else {
       const enabled = this.webrtc.toggleVideo();
       document.getElementById('btn-toggle-cam').textContent = enabled ? '📷 Caméra ON' : '📷 Caméra OFF';
+      if (!enabled) {
+        const localVid = document.getElementById('local-video');
+        if (localVid) localVid.remove();
+      }
     }
   }
 

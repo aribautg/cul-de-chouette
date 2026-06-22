@@ -42,6 +42,7 @@ io.on('connection', (socket) => {
     });
 
     room.addPlayer(socket.id, playerName, avatarId);
+    roomManager.registerPlayerInRoom(socket.id, room.code);
     socket.join(room.code);
 
     console.log(`[ROOM] ${playerName} crée la salle ${room.code}`);
@@ -54,7 +55,7 @@ io.on('connection', (socket) => {
     const room = roomManager.getRoom(roomCode);
 
     if (!room) {
-      callback({ success: false, error: 'Salle introuvable.' });
+      callback({ success: false, error: 'Salle introuvable. Vérifiez le code.' });
       return;
     }
     if (room.started) {
@@ -67,13 +68,14 @@ io.on('connection', (socket) => {
     }
 
     room.addPlayer(socket.id, playerName, avatarId);
-    socket.join(roomCode);
+    roomManager.registerPlayerInRoom(socket.id, room.code);
+    socket.join(room.code);
 
-    console.log(`[ROOM] ${playerName} rejoint ${roomCode}`);
-    callback({ success: true, roomCode, playerId: socket.id });
+    console.log(`[ROOM] ${playerName} rejoint ${room.code}`);
+    callback({ success: true, roomCode: room.code, playerId: socket.id });
 
     // Notifier tous les joueurs de la salle
-    io.to(roomCode).emit('room:playerJoined', {
+    io.to(room.code).emit('room:playerJoined', {
       players: room.getPlayersInfo(),
       newPlayer: { id: socket.id, name: playerName, avatarId }
     });
@@ -195,6 +197,7 @@ io.on('connection', (socket) => {
     if (room) {
       const playerName = room.getPlayerName(socket.id);
       room.removePlayer(socket.id);
+      roomManager.unregisterPlayer(socket.id);
       console.log(`[-] ${playerName} quitte ${room.code}`);
 
       if (room.players.length === 0) {

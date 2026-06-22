@@ -35,6 +35,14 @@ export class RoomManager {
     return code ? this.rooms.get(code) : null;
   }
 
+  registerPlayerInRoom(socketId, roomCode) {
+    this.playerToRoom.set(socketId, roomCode);
+  }
+
+  unregisterPlayer(socketId) {
+    this.playerToRoom.delete(socketId);
+  }
+
   removeRoom(code) {
     const room = this.rooms.get(code);
     if (room) {
