@@ -536,7 +536,8 @@ export class OnlineGameUI {
       const isActive = idx === this.currentPlayerIndex;
       const isMe = player.id === this.myPlayerId;
       const progress = Math.max(0, Math.min(100, (player.score / 343) * 100));
-      const flameLevel = Math.min(7, Math.floor(progress / 14.3));
+      // Flame level: 0=rien, 1=dès 1pt, puis progression non-linéaire pour plus de drame
+      const flameLevel = player.score <= 0 ? 0 : Math.min(7, Math.max(1, Math.ceil(Math.sqrt(progress / 100 * 49))));
 
       const card = document.createElement('div');
       card.className = `player-card ${isActive ? 'active' : ''} ${player.eliminated ? 'eliminated' : ''} ${isMe ? 'is-me' : ''}`;
@@ -565,7 +566,7 @@ export class OnlineGameUI {
               <circle cx="192" cy="18" r="3.5" fill="#a82039"/>
               <circle cx="191" cy="17" r="1.2" fill="#ff6080" opacity="0.6"/>
             </svg>
-            <div class="excalibur-flame" style="clip-path: inset(0 ${100 - progress}% 0 0);">
+            <div class="excalibur-flame">
               <div class="flame-particle"></div>
               <div class="flame-particle"></div>
               <div class="flame-particle"></div>
