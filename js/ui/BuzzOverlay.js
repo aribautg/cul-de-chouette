@@ -12,6 +12,11 @@ export class BuzzOverlay {
   }
 
   _createDOM() {
+    // Ne créer qu'une seule fois
+    if (document.getElementById('buzz-overlay')) {
+      this.overlay = document.getElementById('buzz-overlay');
+      return;
+    }
     this.overlay = document.createElement('div');
     this.overlay.id = 'buzz-overlay';
     this.overlay.className = 'buzz-overlay';
@@ -90,9 +95,12 @@ export class BuzzOverlay {
    * Affiche le résultat final
    */
   showResult(text, type) {
+    clearInterval(this.countdownInterval);
     const resultEl = document.getElementById('buzz-result');
-    resultEl.textContent = text;
-    resultEl.className = `buzz-result buzz-result-${type}`; // type: 'win' | 'lose' | 'tie'
+    if (resultEl) {
+      resultEl.textContent = text;
+      resultEl.className = `buzz-result buzz-result-${type}`;
+    }
   }
 
   /**

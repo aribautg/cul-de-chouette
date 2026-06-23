@@ -16,6 +16,11 @@ export class DiceAnimator {
   }
 
   _createOverlay() {
+    // Ne créer qu'une seule fois
+    if (document.getElementById('dice-anim-overlay')) {
+      this.overlay = document.getElementById('dice-anim-overlay');
+      return;
+    }
     this.overlay = document.createElement('div');
     this.overlay.id = 'dice-anim-overlay';
     this.overlay.className = 'dice-anim-overlay';
@@ -71,6 +76,12 @@ export class DiceAnimator {
     const shadow = document.getElementById('dice-anim-shadow');
     const impact = document.getElementById('dice-anim-impact');
     const particles = document.getElementById('dice-anim-particles');
+
+    // Safety: if DOM elements don't exist, skip animation
+    if (!wrapper || !cube || !shadow) {
+      this.animating = false;
+      return finalValue;
+    }
 
     // Rotation finale pour montrer la bonne face
     const faceRotations = {
@@ -263,6 +274,12 @@ export class DiceAnimator {
     const cube = document.getElementById('dice-cube');
     const shadow = document.getElementById('dice-anim-shadow');
     const impact = document.getElementById('dice-anim-impact');
+
+    // Safety: if DOM elements don't exist, skip animation
+    if (!wrapper || !cube || !shadow) {
+      this.animating = false;
+      return finalValue;
+    }
 
     const faceRotations = {
       1: { x: 0, y: 0 },

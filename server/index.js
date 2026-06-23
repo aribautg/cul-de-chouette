@@ -147,6 +147,16 @@ io.on('connection', (socket) => {
       allDice: result.allDice,
       combination: result.combination
     });
+
+    // If buzz was started, set the timeout to broadcast resolution
+    if (room.buzzActive) {
+      clearTimeout(room.buzzTimeout);
+      room.buzzTimeout = setTimeout(() => {
+        const resolution = room.resolveBuzz();
+        io.to(room.code).emit('game:buzzResolved', resolution);
+      }, 5000);
+    }
+
     callback({ success: true, ...result });
   });
 
@@ -163,7 +173,7 @@ io.on('connection', (socket) => {
         playerName: result.playerName
       });
 
-      // Si le buzz est résolu (tous ont buzzé ou timeout)
+      // Si le buzz est résolu (firstWins = immédiat, lastLoses = tous ont buzzé)
       if (result.resolved) {
         io.to(room.code).emit('game:buzzResolved', result.resolution);
       }
