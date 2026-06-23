@@ -97,6 +97,14 @@ export class GameRoom {
     const allDice = [...this.chouettes, this.cul];
     const combination = this.detectCombination(allDice);
     this.lastCombination = combination;
+
+    // Auto-start buzz for buzz-worthy combinations
+    const buzzTypes = ['suite', 'suiteVelutee', 'chouetteVelute', 'artichette', 'neantSouffle'];
+    if (buzzTypes.includes(combination.type)) {
+      const mode = (combination.type === 'suite' || combination.type === 'suiteVelutee') ? 'lastLoses' : 'firstWins';
+      this.startBuzz(mode, 5000);
+    }
+
     return { die: this.cul, allDice, combination };
   }
 

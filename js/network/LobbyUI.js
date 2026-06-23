@@ -1,5 +1,6 @@
 import { NetworkClient } from './NetworkClient.js';
 import { WebRTCManager } from './WebRTCManager.js';
+import { OnlineGameUI } from './OnlineGameUI.js';
 import { AVATARS } from '../utils/constants.js';
 
 /**
@@ -12,6 +13,7 @@ export class LobbyUI {
     this.webrtc = null;
     this.isHost = false;
     this.onGameStart = null; // callback quand la partie démarre
+    this.onlineGameUI = null;
 
     this._bindUI();
   }
@@ -75,16 +77,23 @@ export class LobbyUI {
 
       this.network.on('playerJoined', (data) => {
         this._updateLobbyPlayers(data.players);
-        // Si on a un stream local actif, connecter au nouveau joueur
+        // Auto-connect WebRTC to new peer
         if (this.webrtc && this.webrtc.localStream && data.newPlayer && data.newPlayer.id !== this.network.playerId) {
           this.webrtc.connectToPeer(data.newPlayer.id);
         }
+        // Also: all existing players with active media should connect to the new peer
+        this._connectToAllPeers();
       });
       this.network.on('playerLeft', (data) => {
         this._updateLobbyPlayers(data.players);
         if (this.webrtc && data.playerId) {
           this.webrtc.disconnectPeer(data.playerId);
         }
+      });
+
+      // === Game Started event ===
+      this.network.on('gameStarted', (data) => {
+        this._onGameStarted(data);
       });
 
       this._setStatus('Connecté ✓');
@@ -231,6 +240,23 @@ export class LobbyUI {
       this._setStatus('❌ ' + res.error);
     }
     // L'événement 'gameStarted' sera reçu par tous via socket
+  }
+
+  _onGameStarted(data) {
+    // Hide setup/lobby screens, show game screen
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('game-screen').classList.add('active');
+
+    // Auto-connect WebRTC to all peers when game starts
+    this._connectToAllPeers();
+
+    // Instantiate OnlineGameUI
+    this.onlineGameUI = new OnlineGameUI(this.network, data);
+
+    // Notify parent app (main.js) that we're in online mode
+    if (this.onGameStart) {
+      this.onGameStart(data, this.onlineGameUI);
+    }
   }
 
   _updateLobbyPlayers(players) {

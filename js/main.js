@@ -20,6 +20,8 @@ class App {
     this.diceAnimator = new DiceAnimator();
     this.lobby = new LobbyUI('https://cul-de-chouette-production.up.railway.app');
     this.rulesPanel = null;
+    this.gameMode = 'local'; // 'local' or 'online'
+    this.onlineGameUI = null;
     this.selectedDifficulty = 1;
     this.pendingVerdierBets = {};
     this.activeJarret = null;
@@ -30,6 +32,13 @@ class App {
       { name: 'Joueur 1', avatarId: 'perceval' },
       { name: 'Joueur 2', avatarId: 'karadoc' }
     ];
+
+    // Wire up lobby game start callback
+    this.lobby.onGameStart = (data, onlineGameUI) => {
+      this.gameMode = 'online';
+      this.onlineGameUI = onlineGameUI;
+    };
+
     this.init();
   }
 
