@@ -75,21 +75,32 @@ export class LobbyUI {
 
   async createRoom() {
     await this._connect();
+    if (!this.network || !this.network.connected) {
+      this._setStatus('❌ Impossible de se connecter au serveur. Réessayez.');
+      return;
+    }
+
     const name = document.getElementById('online-player-name').value.trim() || 'Hôte';
     const avatar = AVATARS[0].id;
     const difficulty = parseInt(document.querySelector('.difficulty-option.selected[data-difficulty]')?.dataset.difficulty || '1');
 
-    const res = await this.network.createRoom(name, avatar, difficulty, true);
-    if (res.success) {
-      this.isHost = true;
-      document.getElementById('lobby-room-code').textContent = res.roomCode;
-      document.getElementById('online-section').style.display = 'none';
-      document.getElementById('lobby-section').style.display = 'block';
-      document.getElementById('btn-start-online').style.display = 'inline-block';
-      this._updateLobbyPlayers([{ name, avatarId: avatar, isHost: true }]);
-      this._setStatus(`Salle créée : ${res.roomCode}`);
-    } else {
-      this._setStatus('❌ ' + res.error);
+    this._setStatus('Création de la salle...');
+
+    try {
+      const res = await this.network.createRoom(name, avatar, difficulty, true);
+      if (res.success) {
+        this.isHost = true;
+        document.getElementById('lobby-room-code').textContent = res.roomCode;
+        document.getElementById('online-section').style.display = 'none';
+        document.getElementById('lobby-section').style.display = 'block';
+        document.getElementById('btn-start-online').style.display = 'inline-block';
+        this._updateLobbyPlayers([{ name, avatarId: avatar, isHost: true }]);
+        this._setStatus(`✓ Salle créée : ${res.roomCode} — Partagez ce code !`);
+      } else {
+        this._setStatus('❌ ' + (res.error || 'Erreur inconnue'));
+      }
+    } catch (err) {
+      this._setStatus('❌ Erreur réseau : ' + err.message);
     }
   }
 
@@ -121,38 +132,57 @@ export class LobbyUI {
   }
 
   async toggleMic() {
-    if (!this.webrtc) return;
-    if (!this.webrtc.localStream) {
-      const stream = await this.webrtc.enableMedia(true, false);
-      if (stream) {
-        document.getElementById('btn-toggle-mic').textContent = '🎤 Micro ON';
-        this._connectToAllPeers();
+    if (!this.webrtc) {
+      this._setStatus('❌ Non connecté au serveur.');
+      return;
+    }
+    try {
+      if (!this.webrtc.localStream) {
+        const stream = await this.webrtc.enableMedia(true, false);
+        if (stream) {
+          document.getElementById('btn-toggle-mic').textContent = '🎤 Micro ON';
+          this._setStatus('🎤 Micro activé');
+          this._connectToAllPeers();
+        } else {
+          this._setStatus('❌ Micro refusé par le navigateur. Vérifiez les permissions.');
+        }
+      } else {
+        const enabled = this.webrtc.toggleMute();
+        document.getElementById('btn-toggle-mic').textContent = enabled ? '🎤 Micro ON' : '🔇 Micro OFF';
       }
-    } else {
-      const enabled = this.webrtc.toggleMute();
-      document.getElementById('btn-toggle-mic').textContent = enabled ? '🎤 Micro ON' : '🔇 Micro OFF';
+    } catch (err) {
+      this._setStatus('❌ Micro : ' + err.message);
     }
   }
 
   async toggleCam() {
-    if (!this.webrtc) return;
-    if (!this.webrtc.videoEnabled) {
-      // Arrêter le stream actuel (audio seul) et en recréer un avec vidéo
-      this.webrtc.disableMedia();
-      const stream = await this.webrtc.enableMedia(true, true);
-      if (stream) {
-        document.getElementById('btn-toggle-cam').textContent = '📷 Caméra ON';
-        document.getElementById('btn-toggle-mic').textContent = '🎤 Micro ON';
-        this._addLocalVideo(stream);
-        this._connectToAllPeers();
+    if (!this.webrtc) {
+      this._setStatus('❌ Non connecté au serveur.');
+      return;
+    }
+    try {
+      if (!this.webrtc.videoEnabled) {
+        this.webrtc.disableMedia();
+        const stream = await this.webrtc.enableMedia(true, true);
+        if (stream) {
+          document.getElementById('btn-toggle-cam').textContent = '📷 Caméra ON';
+          document.getElementById('btn-toggle-mic').textContent = '🎤 Micro ON';
+          this._addLocalVideo(stream);
+          this._setStatus('📷 Caméra activée');
+          this._connectToAllPeers();
+        } else {
+          this._setStatus('❌ Caméra refusée par le navigateur. Vérifiez les permissions.');
+        }
+      } else {
+        const enabled = this.webrtc.toggleVideo();
+        document.getElementById('btn-toggle-cam').textContent = enabled ? '📷 Caméra ON' : '📷 Caméra OFF';
+        if (!enabled) {
+          const localVid = document.getElementById('local-video');
+          if (localVid) localVid.remove();
+        }
       }
-    } else {
-      const enabled = this.webrtc.toggleVideo();
-      document.getElementById('btn-toggle-cam').textContent = enabled ? '📷 Caméra ON' : '📷 Caméra OFF';
-      if (!enabled) {
-        const localVid = document.getElementById('local-video');
-        if (localVid) localVid.remove();
-      }
+    } catch (err) {
+      this._setStatus('❌ Caméra : ' + err.message);
     }
   }
 
