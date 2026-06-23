@@ -566,7 +566,7 @@ export class OnlineGameUI {
               <circle cx="192" cy="18" r="3.5" fill="#a82039"/>
               <circle cx="191" cy="17" r="1.2" fill="#ff6080" opacity="0.6"/>
             </svg>
-            <div class="excalibur-flame">
+            <div class="excalibur-flame" style="--flame-hide: ${Math.max(0, 100 - progress)}%;">
               <div class="flame-particle"></div>
               <div class="flame-particle"></div>
               <div class="flame-particle"></div>
