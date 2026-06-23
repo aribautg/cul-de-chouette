@@ -28,6 +28,20 @@ app.get('/', (req, res) => {
   });
 });
 
+// Debug : lister les salles ouvertes
+app.get('/rooms', (req, res) => {
+  const rooms = [];
+  roomManager.rooms.forEach((room, code) => {
+    rooms.push({
+      code,
+      players: room.players.length,
+      started: room.started,
+      host: room.getPlayerName(room.hostId)
+    });
+  });
+  res.json({ rooms });
+});
+
 // === SOCKET.IO ===
 io.on('connection', (socket) => {
   console.log(`[+] Joueur connecté: ${socket.id}`);
