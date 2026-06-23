@@ -81,9 +81,11 @@ export class WebRTCManager {
     if (this.localStream) {
       const videoTrack = this.localStream.getVideoTracks()[0];
       if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        this.videoEnabled = videoTrack.enabled;
-        return videoTrack.enabled;
+        // Stopper le track complètement (éteint le voyant caméra)
+        videoTrack.stop();
+        this.localStream.removeTrack(videoTrack);
+        this.videoEnabled = false;
+        return false;
       }
     }
     return false;

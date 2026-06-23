@@ -182,11 +182,15 @@ export class LobbyUI {
     }
     try {
       if (!this.webrtc.videoEnabled) {
+        // Allumer la caméra : recréer le stream avec audio + vidéo
         this.webrtc.disableMedia();
         const stream = await this.webrtc.enableMedia(true, true);
         if (stream) {
           document.getElementById('btn-toggle-cam').textContent = '📷 Caméra ON';
           document.getElementById('btn-toggle-mic').textContent = '🎤 Micro ON';
+          // Retirer l'ancienne vidéo locale si elle existe
+          const oldVid = document.getElementById('local-video');
+          if (oldVid) oldVid.remove();
           this._addLocalVideo(stream);
           this._setStatus('📷 Caméra activée');
           this._connectToAllPeers();
@@ -194,12 +198,12 @@ export class LobbyUI {
           this._setStatus('❌ Caméra refusée par le navigateur. Vérifiez les permissions.');
         }
       } else {
-        const enabled = this.webrtc.toggleVideo();
-        document.getElementById('btn-toggle-cam').textContent = enabled ? '📷 Caméra ON' : '📷 Caméra OFF';
-        if (!enabled) {
-          const localVid = document.getElementById('local-video');
-          if (localVid) localVid.remove();
-        }
+        // Éteindre la caméra (stop le track, éteint le voyant)
+        this.webrtc.toggleVideo();
+        document.getElementById('btn-toggle-cam').textContent = '📷 Caméra OFF';
+        const localVid = document.getElementById('local-video');
+        if (localVid) localVid.remove();
+        this._setStatus('📷 Caméra éteinte');
       }
     } catch (err) {
       this._setStatus('❌ Caméra : ' + err.message);
