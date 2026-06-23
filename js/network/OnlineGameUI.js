@@ -46,7 +46,7 @@ export class OnlineGameUI {
   }
 
   _bindLocalUI() {
-    // In-game buttons (sound, log, rules) stay as-is from local mode
+    // Sound toggle
     const soundBtn = document.getElementById('btn-sound-toggle');
     if (soundBtn) {
       soundBtn.addEventListener('click', () => {
@@ -54,6 +54,116 @@ export class OnlineGameUI {
         soundBtn.textContent = enabled ? '🔊' : '🔇';
       });
     }
+
+    // In-game mic/cam controls
+    const micBtn = document.getElementById('btn-game-mic');
+    const camBtn = document.getElementById('btn-game-cam');
+
+    if (micBtn) {
+      micBtn.addEventListener('click', () => this._toggleGameMic());
+    }
+    if (camBtn) {
+      camBtn.addEventListener('click', () => this._toggleGameCam());
+    }
+  }
+
+  /**
+   * Affiche les boutons mic/cam en jeu (appelé quand WebRTC est injecté).
+   */
+  _showMediaControls() {
+    const micBtn = document.getElementById('btn-game-mic');
+    const camBtn = document.getElementById('btn-game-cam');
+    if (micBtn) {
+      micBtn.style.display = 'inline-block';
+      micBtn.textContent = this._webrtcManager?.audioEnabled ? '🎤' : '🎤❌';
+    }
+    if (camBtn) {
+      camBtn.style.display = 'inline-block';
+      camBtn.textContent = this._webrtcManager?.videoEnabled ? '📷' : '📷❌';
+    }
+  }
+
+  async _toggleGameMic() {
+    if (!this._webrtcManager) return;
+
+    if (!this._webrtcManager.localStream) {
+      // Première activation : afficher avertissement
+      if (!this._mediaWarningShown) {
+        this._showMediaWarning(() => this._activateMic());
+        return;
+      }
+      await this._activateMic();
+    } else {
+      const enabled = this._webrtcManager.toggleMute();
+      const btn = document.getElementById('btn-game-mic');
+      if (btn) btn.textContent = enabled ? '🎤' : '🎤❌';
+    }
+  }
+
+  async _activateMic() {
+    const stream = await this._webrtcManager.enableMedia(true, false);
+    if (stream) {
+      document.getElementById('btn-game-mic').textContent = '🎤';
+      this._renderScoreboard();
+    }
+  }
+
+  async _toggleGameCam() {
+    if (!this._webrtcManager) return;
+
+    if (!this._webrtcManager.videoEnabled) {
+      // Première activation : afficher avertissement
+      if (!this._mediaWarningShown) {
+        this._showMediaWarning(() => this._activateCam());
+        return;
+      }
+      await this._activateCam();
+    } else {
+      // Éteindre la caméra
+      this._webrtcManager.toggleVideo();
+      document.getElementById('btn-game-cam').textContent = '📷❌';
+      this._renderScoreboard();
+    }
+  }
+
+  async _activateCam() {
+    this._webrtcManager.disableMedia();
+    const stream = await this._webrtcManager.enableMedia(true, true);
+    if (stream) {
+      document.getElementById('btn-game-cam').textContent = '📷';
+      document.getElementById('btn-game-mic').textContent = '🎤';
+      this._renderScoreboard();
+    }
+  }
+
+  _showMediaWarning(onConfirm) {
+    this._mediaWarningShown = true;
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
+    overlay.innerHTML = `
+      <div class="modal rpg-window" style="max-width: 420px; padding: 24px; text-align: center;">
+        <div style="font-size: 2rem; margin-bottom: 12px;">🎤📷</div>
+        <h3 style="font-family: var(--font-title); color: var(--gold); margin-bottom: 12px;">Activer micro / caméra</h3>
+        <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
+          Votre image et votre voix seront partagées avec les autres joueurs de cette partie.
+          N'activez ces fonctions que si vous connaissez et faites confiance aux personnes présentes dans la salle.
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button class="btn btn-primary" id="media-warn-confirm">J'ai compris, activer</button>
+          <button class="btn" id="media-warn-cancel">Annuler</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    document.getElementById('media-warn-confirm').addEventListener('click', () => {
+      overlay.remove();
+      onConfirm();
+    });
+    document.getElementById('media-warn-cancel').addEventListener('click', () => {
+      overlay.remove();
+      this._mediaWarningShown = false;
+    });
   }
 
   // === INITIAL RENDER ===
@@ -625,6 +735,8 @@ export class OnlineGameUI {
    */
   setWebRTCManager(webrtc) {
     this._webrtcManager = webrtc;
+    this._mediaWarningShown = webrtc?.localStream ? true : false; // Si déjà activé depuis le lobby, pas d'avertissement
+    this._showMediaControls();
   }
 
   _renderItemIcons(player) {
