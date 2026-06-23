@@ -53,6 +53,15 @@ export class LobbyUI {
 
     try {
       await this.network.connect();
+
+      this.network.on('connected', () => {
+        this._setStatus('✓ Connecté au serveur');
+      });
+
+      this.network.on('disconnected', () => {
+        this._setStatus('⚠️ Déconnecté du serveur');
+      });
+
       this.webrtc = new WebRTCManager(this.network);
 
       // Quand un stream distant arrive, afficher la vidéo
@@ -64,8 +73,19 @@ export class LobbyUI {
         this._removeRemoteVideo(peerId);
       };
 
-      this.network.on('playerJoined', (data) => this._updateLobbyPlayers(data.players));
-      this.network.on('playerLeft', (data) => this._updateLobbyPlayers(data.players));
+      this.network.on('playerJoined', (data) => {
+        this._updateLobbyPlayers(data.players);
+        // Si on a un stream local actif, connecter au nouveau joueur
+        if (this.webrtc && this.webrtc.localStream && data.newPlayer && data.newPlayer.id !== this.network.playerId) {
+          this.webrtc.connectToPeer(data.newPlayer.id);
+        }
+      });
+      this.network.on('playerLeft', (data) => {
+        this._updateLobbyPlayers(data.players);
+        if (this.webrtc && data.playerId) {
+          this.webrtc.disconnectPeer(data.playerId);
+        }
+      });
 
       this._setStatus('Connecté ✓');
     } catch (err) {
@@ -187,7 +207,17 @@ export class LobbyUI {
   }
 
   _connectToAllPeers() {
-    // TODO: obtenir la liste des peers depuis le lobby et initier WebRTC
+    if (!this.network || !this.webrtc) return;
+    // Demander au serveur la liste des peers dans la salle
+    this.network.socket.emit('room:getPeers', {}, (peers) => {
+      if (peers && peers.length > 0) {
+        peers.forEach(peerId => {
+          if (peerId !== this.network.playerId) {
+            this.webrtc.connectToPeer(peerId);
+          }
+        });
+      }
+    });
   }
 
   async startOnlineGame() {

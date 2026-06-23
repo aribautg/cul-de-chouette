@@ -193,6 +193,15 @@ io.on('connection', (socket) => {
   });
 
   // --- WebRTC Signaling ---
+  socket.on('room:getPeers', (data, callback) => {
+    const room = roomManager.getRoomByPlayer(socket.id);
+    if (!room) { callback([]); return; }
+    const peers = room.players
+      .filter(p => p.id !== socket.id)
+      .map(p => p.id);
+    callback(peers);
+  });
+
   socket.on('webrtc:offer', ({ targetId, offer }) => {
     io.to(targetId).emit('webrtc:offer', { fromId: socket.id, offer });
   });
