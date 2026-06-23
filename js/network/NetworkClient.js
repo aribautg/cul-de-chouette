@@ -14,56 +14,57 @@ export class NetworkClient {
 
   connect() {
     return new Promise((resolve, reject) => {
-      // Charger Socket.IO depuis le CDN
+      const doConnect = () => {
+        this.socket = window.io(this.serverUrl, {
+          transports: ['websocket', 'polling']
+        });
+
+        this.socket.on('connect', () => {
+          this.connected = true;
+          this.playerId = this.socket.id;
+          this._emit('connected', { id: this.socket.id });
+          resolve();
+        });
+
+        this.socket.on('connect_error', (err) => {
+          reject(new Error('Connexion refusée : ' + err.message));
+        });
+
+        this.socket.on('disconnect', () => {
+          this.connected = false;
+          this._emit('disconnected', {});
+        });
+
+        // === Événements de salle ===
+        this.socket.on('room:playerJoined', (data) => this._emit('playerJoined', data));
+        this.socket.on('room:playerLeft', (data) => this._emit('playerLeft', data));
+
+        // === Événements de jeu ===
+        this.socket.on('game:started', (data) => this._emit('gameStarted', data));
+        this.socket.on('game:chouettesRolled', (data) => this._emit('chouettesRolled', data));
+        this.socket.on('game:culRolled', (data) => this._emit('culRolled', data));
+        this.socket.on('game:buzzRegistered', (data) => this._emit('buzzRegistered', data));
+        this.socket.on('game:buzzResolved', (data) => this._emit('buzzResolved', data));
+        this.socket.on('game:actionResult', (data) => this._emit('actionResult', data));
+        this.socket.on('game:turnStarted', (data) => this._emit('turnStarted', data));
+
+        // === WebRTC signaling ===
+        this.socket.on('webrtc:offer', (data) => this._emit('webrtcOffer', data));
+        this.socket.on('webrtc:answer', (data) => this._emit('webrtcAnswer', data));
+        this.socket.on('webrtc:ice-candidate', (data) => this._emit('webrtcIceCandidate', data));
+      };
+
+      // Charger Socket.IO depuis le CDN si nécessaire
       if (!window.io) {
         const script = document.createElement('script');
         script.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
-        script.onload = () => {
-          this._initSocket();
-          resolve();
-        };
+        script.onload = () => doConnect();
         script.onerror = () => reject(new Error('Impossible de charger Socket.IO'));
         document.head.appendChild(script);
       } else {
-        this._initSocket();
-        resolve();
+        doConnect();
       }
     });
-  }
-
-  _initSocket() {
-    this.socket = window.io(this.serverUrl, {
-      transports: ['websocket', 'polling']
-    });
-
-    this.socket.on('connect', () => {
-      this.connected = true;
-      this.playerId = this.socket.id;
-      this._emit('connected', { id: this.socket.id });
-    });
-
-    this.socket.on('disconnect', () => {
-      this.connected = false;
-      this._emit('disconnected', {});
-    });
-
-    // === Événements de salle ===
-    this.socket.on('room:playerJoined', (data) => this._emit('playerJoined', data));
-    this.socket.on('room:playerLeft', (data) => this._emit('playerLeft', data));
-
-    // === Événements de jeu ===
-    this.socket.on('game:started', (data) => this._emit('gameStarted', data));
-    this.socket.on('game:chouettesRolled', (data) => this._emit('chouettesRolled', data));
-    this.socket.on('game:culRolled', (data) => this._emit('culRolled', data));
-    this.socket.on('game:buzzRegistered', (data) => this._emit('buzzRegistered', data));
-    this.socket.on('game:buzzResolved', (data) => this._emit('buzzResolved', data));
-    this.socket.on('game:actionResult', (data) => this._emit('actionResult', data));
-    this.socket.on('game:turnStarted', (data) => this._emit('turnStarted', data));
-
-    // === WebRTC signaling ===
-    this.socket.on('webrtc:offer', (data) => this._emit('webrtcOffer', data));
-    this.socket.on('webrtc:answer', (data) => this._emit('webrtcAnswer', data));
-    this.socket.on('webrtc:ice-candidate', (data) => this._emit('webrtcIceCandidate', data));
   }
 
   // === Actions ===
