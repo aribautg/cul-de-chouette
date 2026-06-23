@@ -54,116 +54,6 @@ export class OnlineGameUI {
         soundBtn.textContent = enabled ? '🔊' : '🔇';
       });
     }
-
-    // In-game mic/cam controls
-    const micBtn = document.getElementById('btn-game-mic');
-    const camBtn = document.getElementById('btn-game-cam');
-
-    if (micBtn) {
-      micBtn.addEventListener('click', () => this._toggleGameMic());
-    }
-    if (camBtn) {
-      camBtn.addEventListener('click', () => this._toggleGameCam());
-    }
-  }
-
-  /**
-   * Affiche les boutons mic/cam en jeu (appelé quand WebRTC est injecté).
-   */
-  _showMediaControls() {
-    const micBtn = document.getElementById('btn-game-mic');
-    const camBtn = document.getElementById('btn-game-cam');
-    if (micBtn) {
-      micBtn.style.display = 'inline-block';
-      micBtn.textContent = this._webrtcManager?.audioEnabled ? '🎤' : '🎤❌';
-    }
-    if (camBtn) {
-      camBtn.style.display = 'inline-block';
-      camBtn.textContent = this._webrtcManager?.videoEnabled ? '📷' : '📷❌';
-    }
-  }
-
-  async _toggleGameMic() {
-    if (!this._webrtcManager) return;
-
-    if (!this._webrtcManager.localStream) {
-      // Première activation : afficher avertissement
-      if (!this._mediaWarningShown) {
-        this._showMediaWarning(() => this._activateMic());
-        return;
-      }
-      await this._activateMic();
-    } else {
-      const enabled = this._webrtcManager.toggleMute();
-      const btn = document.getElementById('btn-game-mic');
-      if (btn) btn.textContent = enabled ? '🎤' : '🎤❌';
-    }
-  }
-
-  async _activateMic() {
-    const stream = await this._webrtcManager.enableMedia(true, false);
-    if (stream) {
-      document.getElementById('btn-game-mic').textContent = '🎤';
-      this._renderScoreboard();
-    }
-  }
-
-  async _toggleGameCam() {
-    if (!this._webrtcManager) return;
-
-    if (!this._webrtcManager.videoEnabled) {
-      // Première activation : afficher avertissement
-      if (!this._mediaWarningShown) {
-        this._showMediaWarning(() => this._activateCam());
-        return;
-      }
-      await this._activateCam();
-    } else {
-      // Éteindre la caméra
-      this._webrtcManager.toggleVideo();
-      document.getElementById('btn-game-cam').textContent = '📷❌';
-      this._renderScoreboard();
-    }
-  }
-
-  async _activateCam() {
-    this._webrtcManager.disableMedia();
-    const stream = await this._webrtcManager.enableMedia(true, true);
-    if (stream) {
-      document.getElementById('btn-game-cam').textContent = '📷';
-      document.getElementById('btn-game-mic').textContent = '🎤';
-      this._renderScoreboard();
-    }
-  }
-
-  _showMediaWarning(onConfirm) {
-    this._mediaWarningShown = true;
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay active';
-    overlay.innerHTML = `
-      <div class="modal rpg-window" style="max-width: 420px; padding: 24px; text-align: center;">
-        <div style="font-size: 2rem; margin-bottom: 12px;">🎤📷</div>
-        <h3 style="font-family: var(--font-title); color: var(--gold); margin-bottom: 12px;">Activer micro / caméra</h3>
-        <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
-          Votre image et votre voix seront partagées avec les autres joueurs de cette partie.
-          N'activez ces fonctions que si vous connaissez et faites confiance aux personnes présentes dans la salle.
-        </p>
-        <div style="display: flex; gap: 12px; justify-content: center;">
-          <button class="btn btn-primary" id="media-warn-confirm">J'ai compris, activer</button>
-          <button class="btn" id="media-warn-cancel">Annuler</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    document.getElementById('media-warn-confirm').addEventListener('click', () => {
-      overlay.remove();
-      onConfirm();
-    });
-    document.getElementById('media-warn-cancel').addEventListener('click', () => {
-      overlay.remove();
-      this._mediaWarningShown = false;
-    });
   }
 
   // === INITIAL RENDER ===
@@ -652,7 +542,6 @@ export class OnlineGameUI {
       const card = document.createElement('div');
       card.className = `player-card ${isActive ? 'active' : ''} ${player.eliminated ? 'eliminated' : ''} ${isMe ? 'is-me' : ''}`;
       card.innerHTML = `
-        <div class="player-webcam-slot" id="webcam-slot-${player.id}"></div>
         <div class="player-avatar" style="background: ${avatar.color};">${avatar.name[0]}</div>
         <div class="player-card-name">${player.name}${isMe ? ' (vous)' : ''}</div>
         <div class="player-card-score">${player.score}</div>
@@ -689,54 +578,6 @@ export class OnlineGameUI {
       `;
       container.appendChild(card);
     });
-
-    // Migrate webcam streams into the scoreboard slots
-    this._attachWebcamStreams();
-  }
-
-  /**
-   * Attache les streams WebRTC aux slots webcam du scoreboard.
-   */
-  _attachWebcamStreams() {
-    if (!this._webrtcManager) return;
-
-    // Local video → my slot
-    if (this._webrtcManager.localStream) {
-      const mySlot = document.getElementById(`webcam-slot-${this.myPlayerId}`);
-      if (mySlot && !mySlot.querySelector('video')) {
-        const video = document.createElement('video');
-        video.srcObject = this._webrtcManager.localStream;
-        video.autoplay = true;
-        video.muted = true;
-        video.playsInline = true;
-        video.className = 'webcam-mini';
-        mySlot.appendChild(video);
-      }
-    }
-
-    // Remote videos → peer slots
-    this._webrtcManager.peers.forEach((peer, peerId) => {
-      if (peer.remoteStream) {
-        const slot = document.getElementById(`webcam-slot-${peerId}`);
-        if (slot && !slot.querySelector('video')) {
-          const video = document.createElement('video');
-          video.srcObject = peer.remoteStream;
-          video.autoplay = true;
-          video.playsInline = true;
-          video.className = 'webcam-mini';
-          slot.appendChild(video);
-        }
-      }
-    });
-  }
-
-  /**
-   * Injecte le WebRTCManager pour afficher les streams dans le jeu.
-   */
-  setWebRTCManager(webrtc) {
-    this._webrtcManager = webrtc;
-    this._mediaWarningShown = webrtc?.localStream ? true : false; // Si déjà activé depuis le lobby, pas d'avertissement
-    this._showMediaControls();
   }
 
   _renderItemIcons(player) {

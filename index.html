@@ -97,10 +97,9 @@
           <p style="color: var(--text-secondary); margin-bottom: 12px;">Partagez ce code aux autres joueurs pour qu'ils rejoignent.</p>
           <div id="lobby-players" class="players-list"></div>
           <div style="display: flex; gap: 12px; margin-top: 16px; justify-content: center;">
-            <button class="btn btn-sm" id="btn-toggle-mic" title="Micro">🎤 Micro</button>
-            <button class="btn btn-sm" id="btn-toggle-cam" title="Caméra">📷 Caméra</button>
+            <button class="btn btn-sm" id="btn-voice-chat" title="Chat vocal">🎙️ Ouvrir le chat vocal (Jitsi)</button>
           </div>
-          <div id="lobby-videos" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; justify-content: center;"></div>
+          <div id="lobby-videos" style="display: none;"></div>
           <div style="text-align: center; margin-top: 16px;">
             <button class="btn btn-primary btn-lg" id="btn-start-online">Lancer la Partie</button>
           </div>
@@ -171,8 +170,7 @@
           <span class="current-player-name" id="current-player-name">—</span>
         </div>
         <div class="game-controls">
-          <button class="btn btn-sm" id="btn-game-mic" title="Micro" style="display: none;">🎤</button>
-          <button class="btn btn-sm" id="btn-game-cam" title="Caméra" style="display: none;">📷</button>
+          <button class="btn btn-sm" id="btn-game-voice" title="Chat vocal" style="display: none;">🎙️ Vocal</button>
           <button class="btn btn-sm" id="btn-sound-toggle" title="Sons">🔊</button>
           <button class="btn btn-sm" id="btn-log">📜 Log</button>
           <button class="btn btn-sm" id="btn-rules-ingame">📖 Règles</button>
