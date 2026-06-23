@@ -17,21 +17,45 @@ export class WebRTCManager {
 
   _bindSignaling() {
     this.network.on('webrtcOffer', async ({ fromId, offer }) => {
-      const pc = this._getOrCreatePeer(fromId);
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      this.network.sendWebRTCAnswer(fromId, answer);
+      try {
+        const pc = this._getOrCreatePeer(fromId);
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+        // Ajouter nos tracks locaux AVANT de créer la réponse
+        if (this.localStream) {
+          const senders = pc.getSenders();
+          this.localStream.getTracks().forEach(track => {
+            // Ne pas ajouter si déjà présent
+            if (!senders.find(s => s.track === track)) {
+              pc.addTrack(track, this.localStream);
+            }
+          });
+        }
+
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        this.network.sendWebRTCAnswer(fromId, answer);
+      } catch (err) {
+        console.error('[WebRTC] Error handling offer:', err);
+      }
     });
 
     this.network.on('webrtcAnswer', async ({ fromId, answer }) => {
-      const pc = this._getPeer(fromId);
-      if (pc) await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      try {
+        const pc = this._getPeer(fromId);
+        if (pc) await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      } catch (err) {
+        console.error('[WebRTC] Error handling answer:', err);
+      }
     });
 
     this.network.on('webrtcIceCandidate', async ({ fromId, candidate }) => {
-      const pc = this._getPeer(fromId);
-      if (pc && candidate) await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      try {
+        const pc = this._getPeer(fromId);
+        if (pc && candidate) await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.error('[WebRTC] Error handling ICE:', err);
+      }
     });
   }
 
@@ -95,19 +119,20 @@ export class WebRTCManager {
    * Initie une connexion vers un peer (appeler pour chaque nouveau joueur).
    */
   async connectToPeer(peerId) {
-    const pc = this._getOrCreatePeer(peerId);
+    try {
+      const pc = this._getOrCreatePeer(peerId);
 
-    // Ajouter nos tracks locaux
-    if (this.localStream) {
-      this.localStream.getTracks().forEach(track => {
-        pc.addTrack(track, this.localStream);
+      // Les tracks sont déjà ajoutés par _getOrCreatePeer
+      // Créer et envoyer l'offre
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
       });
+      await pc.setLocalDescription(offer);
+      this.network.sendWebRTCOffer(peerId, offer);
+    } catch (err) {
+      console.error('[WebRTC] Error connecting to peer:', err);
     }
-
-    // Créer et envoyer l'offre
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    this.network.sendWebRTCOffer(peerId, offer);
   }
 
   /**
@@ -174,6 +199,10 @@ export class WebRTCManager {
       this.localStream.getTracks().forEach(track => {
         pc.addTrack(track, this.localStream);
       });
+    } else {
+      // Même sans media local, préparer la réception de l'audio/vidéo distant
+      pc.addTransceiver('audio', { direction: 'recvonly' });
+      pc.addTransceiver('video', { direction: 'recvonly' });
     }
 
     this.peers.set(peerId, { connection: pc, remoteStream: null });
