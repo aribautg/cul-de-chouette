@@ -64,8 +64,10 @@
 .excalibur-flame {
   position: absolute;
   inset: 0;
-  clip-path: inset(0 var(--flame-hide, 100%) 0 0);
-  transition: clip-path 0.8s ease, opacity 0.6s ease;
+  /* Masque avec dégradé : visible à gauche, fondu progressif vers la droite */
+  -webkit-mask-image: linear-gradient(to right, black 0%, black var(--flame-solid, 0%), transparent var(--flame-fade, 0%));
+  mask-image: linear-gradient(to right, black 0%, black var(--flame-solid, 0%), transparent var(--flame-fade, 0%));
+  transition: opacity 0.6s ease;
   pointer-events: none;
   overflow: hidden;
 }
