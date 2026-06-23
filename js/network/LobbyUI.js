@@ -253,6 +253,11 @@ export class LobbyUI {
     // Instantiate OnlineGameUI
     this.onlineGameUI = new OnlineGameUI(this.network, data);
 
+    // Inject WebRTC manager so webcams appear in scoreboard
+    if (this.webrtc) {
+      this.onlineGameUI.setWebRTCManager(this.webrtc);
+    }
+
     // Notify parent app (main.js) that we're in online mode
     if (this.onGameStart) {
       this.onGameStart(data, this.onlineGameUI);

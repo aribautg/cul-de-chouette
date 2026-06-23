@@ -541,6 +541,7 @@ export class OnlineGameUI {
       const card = document.createElement('div');
       card.className = `player-card ${isActive ? 'active' : ''} ${player.eliminated ? 'eliminated' : ''} ${isMe ? 'is-me' : ''}`;
       card.innerHTML = `
+        <div class="player-webcam-slot" id="webcam-slot-${player.id}"></div>
         <div class="player-avatar" style="background: ${avatar.color};">${avatar.name[0]}</div>
         <div class="player-card-name">${player.name}${isMe ? ' (vous)' : ''}</div>
         <div class="player-card-score">${player.score}</div>
@@ -553,11 +554,21 @@ export class OnlineGameUI {
               <polygon points="0,18 4,18 12,12 12,24" fill="#d8d8e8" stroke="#8888a0" stroke-width="0.5"/>
               <rect x="30" y="16" width="120" height="4" rx="2" fill="#9898b0" opacity="0.4"/>
               <rect x="160" y="4" width="6" height="28" rx="2" fill="#d4af37" stroke="#8b7320" stroke-width="0.8"/>
+              <rect x="161" y="6" width="4" height="4" rx="1" fill="#f0d060" opacity="0.6"/>
+              <rect x="161" y="26" width="4" height="4" rx="1" fill="#f0d060" opacity="0.6"/>
               <rect x="166" y="11" width="22" height="14" rx="3" fill="#3a2718" stroke="#1a0a00" stroke-width="0.8"/>
+              <line x1="170" y1="11" x2="170" y2="25" stroke="#5a4030" stroke-width="1.2"/>
+              <line x1="175" y1="11" x2="175" y2="25" stroke="#5a4030" stroke-width="1.2"/>
+              <line x1="180" y1="11" x2="180" y2="25" stroke="#5a4030" stroke-width="1.2"/>
+              <line x1="185" y1="11" x2="185" y2="25" stroke="#5a4030" stroke-width="1.2"/>
               <ellipse cx="192" cy="18" rx="6" ry="7" fill="#d4af37" stroke="#8b7320" stroke-width="0.8"/>
               <circle cx="192" cy="18" r="3.5" fill="#a82039"/>
+              <circle cx="191" cy="17" r="1.2" fill="#ff6080" opacity="0.6"/>
             </svg>
             <div class="excalibur-flame" style="clip-path: inset(0 ${100 - progress}% 0 0);">
+              <div class="flame-particle"></div>
+              <div class="flame-particle"></div>
+              <div class="flame-particle"></div>
               <div class="flame-particle"></div>
               <div class="flame-particle"></div>
               <div class="flame-particle"></div>
@@ -567,6 +578,52 @@ export class OnlineGameUI {
       `;
       container.appendChild(card);
     });
+
+    // Migrate webcam streams into the scoreboard slots
+    this._attachWebcamStreams();
+  }
+
+  /**
+   * Attache les streams WebRTC aux slots webcam du scoreboard.
+   */
+  _attachWebcamStreams() {
+    if (!this._webrtcManager) return;
+
+    // Local video → my slot
+    if (this._webrtcManager.localStream) {
+      const mySlot = document.getElementById(`webcam-slot-${this.myPlayerId}`);
+      if (mySlot && !mySlot.querySelector('video')) {
+        const video = document.createElement('video');
+        video.srcObject = this._webrtcManager.localStream;
+        video.autoplay = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.className = 'webcam-mini';
+        mySlot.appendChild(video);
+      }
+    }
+
+    // Remote videos → peer slots
+    this._webrtcManager.peers.forEach((peer, peerId) => {
+      if (peer.remoteStream) {
+        const slot = document.getElementById(`webcam-slot-${peerId}`);
+        if (slot && !slot.querySelector('video')) {
+          const video = document.createElement('video');
+          video.srcObject = peer.remoteStream;
+          video.autoplay = true;
+          video.playsInline = true;
+          video.className = 'webcam-mini';
+          slot.appendChild(video);
+        }
+      }
+    });
+  }
+
+  /**
+   * Injecte le WebRTCManager pour afficher les streams dans le jeu.
+   */
+  setWebRTCManager(webrtc) {
+    this._webrtcManager = webrtc;
   }
 
   _renderItemIcons(player) {
