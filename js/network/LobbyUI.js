@@ -1,6 +1,7 @@
 import { NetworkClient } from './NetworkClient.js';
 import { OnlineGameUI } from './OnlineGameUI.js';
 import { VoiceChat } from './VoiceChat.js';
+import { ChatPanel } from '../ui/ChatPanel.js';
 import { AVATARS } from '../utils/constants.js';
 
 /**
@@ -14,6 +15,7 @@ export class LobbyUI {
     this.roomCode = null;
     this.isHost = false;
     this.voiceChat = null;
+    this.chatPanel = null;
     this.onGameStart = null;
     this.onlineGameUI = null;
 
@@ -181,6 +183,14 @@ export class LobbyUI {
       voiceBtn.style.display = 'inline-block';
       voiceBtn.addEventListener('click', () => this.toggleVoiceChat());
       this._updateVoiceButton();
+    }
+
+    // Show chat button in game header
+    const chatBtn = document.getElementById('btn-game-chat');
+    if (chatBtn) {
+      chatBtn.style.display = 'inline-block';
+      this.chatPanel = new ChatPanel(this.network);
+      chatBtn.addEventListener('click', () => this.chatPanel.toggle());
     }
 
     // Connect voice to new peers when they join during game

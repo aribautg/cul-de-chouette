@@ -546,6 +546,7 @@ export class OnlineGameUI {
         <div class="player-card-name">${player.name}${isMe ? ' (vous)' : ''}</div>
         <div class="player-card-score">${player.score}</div>
         <div class="player-card-items">${this._renderItemIcons(player)}</div>
+        <div class="voice-bar"><div class="voice-bar-fill"></div></div>
         <div class="player-card-progress">
           <div class="excalibur-sword" data-progress="${flameLevel}">
             <svg viewBox="0 0 200 36" xmlns="http://www.w3.org/2000/svg">

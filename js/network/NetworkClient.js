@@ -52,6 +52,9 @@ export class NetworkClient {
         this.socket.on('webrtc:offer', (data) => this._emit('webrtcOffer', data));
         this.socket.on('webrtc:answer', (data) => this._emit('webrtcAnswer', data));
         this.socket.on('webrtc:ice-candidate', (data) => this._emit('webrtcIceCandidate', data));
+
+        // Chat
+        this.socket.on('chat:message', (data) => this._emit('chatMessage', data));
       };
 
       // Charger Socket.IO depuis le CDN si nécessaire

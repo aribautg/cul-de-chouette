@@ -212,6 +212,20 @@ io.on('connection', (socket) => {
     callback(peers);
   });
 
+  // --- Chat textuel ---
+  socket.on('chat:message', (data) => {
+    const room = roomManager.getRoomByPlayer(socket.id);
+    if (!room) return;
+    const playerName = room.getPlayerName(socket.id);
+    // Broadcast à tous sauf l'envoyeur
+    socket.to(room.code).emit('chat:message', {
+      playerId: socket.id,
+      playerName,
+      text: data.text,
+      isTranscription: data.isTranscription || false
+    });
+  });
+
   socket.on('webrtc:offer', ({ targetId, offer }) => {
     io.to(targetId).emit('webrtc:offer', { fromId: socket.id, offer });
   });
