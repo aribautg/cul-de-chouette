@@ -39,6 +39,7 @@ export class LobbyUI {
     document.getElementById('btn-create-room').addEventListener('click', () => this.createRoom());
     document.getElementById('btn-join-room').addEventListener('click', () => this.joinRoom());
     document.getElementById('btn-voice-chat').addEventListener('click', () => this.toggleVoiceChat());
+    document.getElementById('btn-lobby-chat').addEventListener('click', () => this._toggleChat());
     document.getElementById('btn-start-online').addEventListener('click', () => this.startOnlineGame());
   }
 
@@ -55,10 +56,25 @@ export class LobbyUI {
       this.network.on('playerLeft', (data) => this._updateLobbyPlayers(data.players));
       this.network.on('gameStarted', (data) => this._onGameStarted(data));
 
+      // Initialiser le chat dès la connexion
+      this.chatPanel = new ChatPanel(this.network);
+
       this._setStatus('Connecté ✓');
     } catch (err) {
       this._setStatus('❌ Erreur de connexion : ' + err.message);
     }
+  }
+
+  _toggleChat() {
+    if (!this.chatPanel) {
+      if (this.network) {
+        this.chatPanel = new ChatPanel(this.network);
+      } else {
+        this._setStatus('❌ Connectez-vous d\'abord.');
+        return;
+      }
+    }
+    this.chatPanel.toggle();
   }
 
   async createRoom() {
@@ -181,7 +197,7 @@ export class LobbyUI {
     const voiceBtn = document.getElementById('btn-game-voice');
     if (voiceBtn) {
       voiceBtn.style.display = 'inline-block';
-      voiceBtn.addEventListener('click', () => this.toggleVoiceChat());
+      voiceBtn.onclick = () => this.toggleVoiceChat();
       this._updateVoiceButton();
     }
 
@@ -189,8 +205,7 @@ export class LobbyUI {
     const chatBtn = document.getElementById('btn-game-chat');
     if (chatBtn) {
       chatBtn.style.display = 'inline-block';
-      this.chatPanel = new ChatPanel(this.network);
-      chatBtn.addEventListener('click', () => this.chatPanel.toggle());
+      chatBtn.onclick = () => this._toggleChat();
     }
 
     // Connect voice to new peers when they join during game
