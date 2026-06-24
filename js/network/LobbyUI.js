@@ -1,5 +1,6 @@
 import { NetworkClient } from './NetworkClient.js';
 import { OnlineGameUI } from './OnlineGameUI.js';
+import { VoiceChat } from './VoiceChat.js';
 import { AVATARS } from '../utils/constants.js';
 
 /**
@@ -12,6 +13,7 @@ export class LobbyUI {
     this.network = null;
     this.roomCode = null;
     this.isHost = false;
+    this.voiceChat = null;
     this.onGameStart = null;
     this.onlineGameUI = null;
 
@@ -34,7 +36,7 @@ export class LobbyUI {
 
     document.getElementById('btn-create-room').addEventListener('click', () => this.createRoom());
     document.getElementById('btn-join-room').addEventListener('click', () => this.joinRoom());
-    document.getElementById('btn-voice-chat').addEventListener('click', () => this.openVoiceChat());
+    document.getElementById('btn-voice-chat').addEventListener('click', () => this.toggleVoiceChat());
     document.getElementById('btn-start-online').addEventListener('click', () => this.startOnlineGame());
   }
 
@@ -118,18 +120,47 @@ export class LobbyUI {
   }
 
   /**
-   * Ouvre un salon vocal Jitsi Meet dans un nouvel onglet.
-   * Le nom de la salle Jitsi est basé sur le code de la salle de jeu.
+   * Active/désactive le chat vocal intégré (WebRTC).
    */
-  openVoiceChat() {
-    if (!this.roomCode) {
-      this._setStatus('❌ Créez ou rejoignez une salle d\'abord.');
+  async toggleVoiceChat() {
+    if (!this.network || !this.network.connected) {
+      this._setStatus('❌ Connectez-vous à une salle d\'abord.');
       return;
     }
-    const jitsiRoom = `CulDeChouette-${this.roomCode}`;
-    const url = `https://meet.jit.si/${jitsiRoom}`;
-    window.open(url, '_blank');
-    this._setStatus(`🎙️ Chat vocal ouvert dans un nouvel onglet (Jitsi)`);
+
+    if (!this.voiceChat) {
+      this.voiceChat = new VoiceChat(this.network);
+      this.voiceChat.onStateChange = (state) => {
+        this._updateVoiceButton();
+      };
+    }
+
+    if (!this.voiceChat.isActive()) {
+      const ok = await this.voiceChat.join();
+      if (ok) {
+        this.voiceChat.toggleMute(); // Unmute immédiatement
+        this._setStatus('🎙️ Chat vocal activé — vous êtes en direct !');
+      } else {
+        this._setStatus('❌ Micro refusé par le navigateur. Vérifiez les permissions.');
+      }
+    } else {
+      // Toggle mute
+      const muted = this.voiceChat.toggleMute();
+      this._setStatus(muted ? '🔇 Micro coupé' : '🎙️ Micro actif');
+    }
+    this._updateVoiceButton();
+  }
+
+  _updateVoiceButton() {
+    const btn = document.getElementById('btn-voice-chat');
+    const gameBtn = document.getElementById('btn-game-voice');
+    const label = !this.voiceChat?.isActive() ? '🎙️ Activer le vocal'
+      : this.voiceChat.isMuted() ? '🔇 Micro coupé (cliquer pour parler)'
+      : '🎙️ Micro actif (cliquer pour couper)';
+    if (btn) btn.textContent = label;
+    if (gameBtn) gameBtn.textContent = this.voiceChat?.isActive()
+      ? (this.voiceChat.isMuted() ? '🔇' : '🎙️')
+      : '🎙️';
   }
 
   async startOnlineGame() {
@@ -148,8 +179,21 @@ export class LobbyUI {
     const voiceBtn = document.getElementById('btn-game-voice');
     if (voiceBtn) {
       voiceBtn.style.display = 'inline-block';
-      voiceBtn.addEventListener('click', () => this.openVoiceChat());
+      voiceBtn.addEventListener('click', () => this.toggleVoiceChat());
+      this._updateVoiceButton();
     }
+
+    // Connect voice to new peers when they join during game
+    this.network.on('playerJoined', (data) => {
+      if (this.voiceChat && this.voiceChat.isActive() && data.newPlayer) {
+        this.voiceChat.connectPeer(data.newPlayer.id);
+      }
+    });
+    this.network.on('playerLeft', (data) => {
+      if (this.voiceChat && data.playerId) {
+        this.voiceChat.disconnectPeer(data.playerId);
+      }
+    });
 
     this.onlineGameUI = new OnlineGameUI(this.network, data);
 
