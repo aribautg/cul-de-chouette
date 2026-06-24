@@ -11,14 +11,15 @@ export class VoiceChat {
     this.muted = true; // Commence muté
     this.active = false;
     this.onStateChange = null; // callback(state)
+    this.onRemoteStream = null; // callback(peerId, stream) — pour le VoiceMeter
+    this.onConnectionStatus = null; // callback(peerId, status)
 
     this._iceServers = [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun.relay.metered.ca:80' },
-      { urls: 'turn:global.relay.metered.ca:80', username: 'open', credential: 'open' },
-      { urls: 'turn:global.relay.metered.ca:443', username: 'open', credential: 'open' },
-      { urls: 'turn:global.relay.metered.ca:443?transport=tcp', username: 'open', credential: 'open' }
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun3.l.google.com:19302' },
+      { urls: 'stun:stun4.l.google.com:19302' }
     ];
 
     this._bindSignaling();
@@ -195,12 +196,25 @@ export class VoiceChat {
       audioEl.srcObject = stream;
       const peer = this.peers.get(peerId);
       if (peer) peer.audioEl = audioEl;
+
+      // Notifier pour le VoiceMeter
+      if (this.onRemoteStream) this.onRemoteStream(peerId, stream);
     };
 
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+      const state = pc.connectionState;
+      if (this.onConnectionStatus) this.onConnectionStatus(peerId, state);
+      if (state === 'connected') {
+        console.log(`[Voice] ✓ Connecté à ${peerId}`);
+      }
+      if (state === 'disconnected' || state === 'failed') {
+        console.log(`[Voice] ✗ Déconnecté de ${peerId} (${state})`);
         this.disconnectPeer(peerId);
       }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      console.log(`[Voice] ICE state (${peerId}): ${pc.iceConnectionState}`);
     };
 
     // Ajouter un transceiver audio pour recevoir même sans track local

@@ -2,6 +2,7 @@ import { NetworkClient } from './NetworkClient.js';
 import { OnlineGameUI } from './OnlineGameUI.js';
 import { VoiceChat } from './VoiceChat.js';
 import { ChatPanel } from '../ui/ChatPanel.js';
+import { VoiceMeter } from '../ui/VoiceMeter.js';
 import { AVATARS } from '../utils/constants.js';
 
 /**
@@ -15,6 +16,7 @@ export class LobbyUI {
     this.roomCode = null;
     this.isHost = false;
     this.voiceChat = null;
+    this.voiceMeter = null;
     this.chatPanel = null;
     this.onGameStart = null;
     this.onlineGameUI = null;
@@ -148,14 +150,37 @@ export class LobbyUI {
 
     if (!this.voiceChat) {
       this.voiceChat = new VoiceChat(this.network);
+      this.voiceMeter = new VoiceMeter();
+
       this.voiceChat.onStateChange = (state) => {
         this._updateVoiceButton();
+      };
+
+      // Quand un stream distant arrive, connecter au VoiceMeter
+      this.voiceChat.onRemoteStream = (peerId, stream) => {
+        const card = document.querySelector(`.player-card[data-peer-id="${peerId}"]`) || 
+                     document.querySelectorAll('.player-card')[1]; // fallback
+        if (card) this.voiceMeter.attachStream(peerId, stream, card);
+        this._setStatus('🔊 Audio connecté avec un joueur !');
+      };
+
+      this.voiceChat.onConnectionStatus = (peerId, status) => {
+        if (status === 'connected') {
+          this._setStatus('✓ Connexion vocale établie !');
+        } else if (status === 'failed') {
+          this._setStatus('⚠️ Connexion vocale échouée (réseau restrictif). Essayez sur un autre réseau.');
+        }
       };
     }
 
     if (!this.voiceChat.isActive()) {
       const ok = await this.voiceChat.join();
       if (ok) {
+        // Connecter le VoiceMeter au micro local
+        if (this.voiceChat.localStream) {
+          const myCard = document.querySelector('.player-card') || document.body;
+          this.voiceMeter.attachStream('local', this.voiceChat.localStream, myCard);
+        }
         this.voiceChat.toggleMute(); // Unmute immédiatement
         this._setStatus('🎙️ Chat vocal activé — vous êtes en direct !');
       } else {
